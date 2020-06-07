@@ -1,0 +1,446 @@
+#!/bin/bash
+
+add_user(){
+    echo -en "\e[1;34m";
+    read -p "Enter Username For New User: " username01;
+    echo -en "\e[0m";
+    user_profile=$(cat /data/data/com.termux/files/usr/etc/sudo/users.yml | grep -w $username01 | head -n1);
+    
+    if [[ $user_profile == $username01 ]];
+    then
+        echo "E: User Already exists.";
+        exit 1;
+    else 
+        echo -en "\e[1;34m";
+        read -p "Enter Password For User '"${username01}"': " password01
+        echo -en "\e[0m";
+        
+        echo "Saving...";
+        
+        sleep 0.5;
+        
+        progress;
+        
+        echo ${username01}": "${password01} >> /data/data/com.termux/files/usr/etc/sudo/users.yml
+        echo "Saved User!                                 ";
+    fi
+    
+    
+}
+progress(){
+	echo -ne "\e[1;32m[#####                     [32%]\r"
+	sleep 0.01
+	echo -ne '########                  [45%]\r'
+	sleep 0.01
+	echo -ne '############              [50%]\r'
+	sleep 0.01
+	echo -ne '###################       [75%]\r'
+	sleep 0.01
+	echo -ne '####################      [80%]\r'
+	sleep 0.01
+	echo -ne '#####################     [95%]\r'
+	sleep 0.01
+	echo -ne '#####################     [95%]\r'
+	sleep 0.01
+	echo -ne '#####################     [95%]\r'
+	sleep 0.01
+	echo -ne '#####################     [95%]\r'
+	sleep 0.01
+	
+	echo -ne '######################   [100%]\r\e[0m'
+}
+if [[ $1 == "-"* ]];
+then
+    if [[ $1 == "--"* ]];
+    then
+        # long option
+        case $1 in
+        	"--help" )
+        		echo -e "SUDO script version 3.8.1";
+        		echo -e "Copyright (c) Ar Rakin 2020, All Rights Reserved.";
+        		echo -e "Usage: \n";
+        		echo -e "		sudo [option] [args]\n";
+        		echo -e "Options: \n";
+        		echo -e "		-h | --help   Display This Help & Exit.";
+        		echo -e "		-v | --version   Display The version of sudo.";
+        		echo -e "		-r | --remove   Remove sudo binary.";
+        		echo -e "		-c | --command    Run commands with sudo.";
+        		echo -e "		-u | --upgrade    Check & install updates of sudo.";
+        		echo -e "		-a | --adduser    Add a user to sudo.\n";
+        		echo -e "Commands:\n";
+        		echo -e "       Use 'logout' command to logout from sudo.";
+        		echo -e "		You Can Run Any Command via sudo as argument. But if you are using Command which contains more than 1 word, then you need to use quotes (e.g. '' or \"\") to execute them.\n";
+        		echo -e "\e[1;33mWARNING: If you don't know what is SU & SUDO then please do not use this. Any Wrong Command Can HARM YOUR DEVICE!\e[0m";
+        	;;
+        	"--version" )
+        	    version=$(cat /data/data/com.termux/files/usr/etc/sudo/version.yml);
+        	    echo $version;
+        	;;
+        	"--remove" )
+        	    echo "";
+        	    echo -en "\e[1;33mW: Do You Really Want To Uninstall sudo binary?[Y/n] \e[0m";
+        	    read answer2;
+        	    
+        	    if [[ $answer2 == "y" ]] || [[ $answer2 == "Y" ]];
+        	    then
+        	        
+        	        {
+        	            command rm /data/data/com.termux/files/usr/etc/su.bashrc &&
+        	            command rm -R /data/data/com.termux/files/usr/etc/sudo/
+        	        } || {
+        	            echo -e "E: Can't Uninstall sudo binary.";
+        	            exit 1;
+        	        }
+        	        
+        	        progress
+        	        
+        	        echo -e "[+] Successfully Uninstalled sudo binary!";
+        	        {
+        	            command rm /data/data/com.termux/files/usr/bin/sudo
+        	        }
+        	        exit 1;
+        	    else
+        	        echo "Aborted by user.";
+        	    fi
+        	;;
+        	"--command" )
+        	    # command execute
+                if [[ $2 != "" ]];
+                then
+                   command ${2};
+                   exit 1;
+                fi
+
+        	;;
+        	"--upgrade" )
+        	    command -v git > /dev/null 2>&1 || {
+        	        command apt install git > /dev/null 2>&1;
+        	    };
+        	    command git clone https://github.com/rakinar2/sudo-in-termux > /dev/null 2>&1;
+        	    u_version=$(cat sudo-in-termux/sudo/version.yml);
+        	    c_version=$(cat /data/data/com.termux/files/usr/etc/sudo/version.yml);
+        	    if [[ $u_version == $c_version ]];
+        	    then
+        	        echo -e "\e[34mMessage: You are using the latest version of sudo script.\e[0m";
+        	    else 
+        	        echo -e "\e[34mMessage: A latest version of sudo script is available!.\e[0m";
+        	        echo -en "\e[1;33m[?] Do you want to upgrade sudo script? [Y/n]\e[0m";
+        	        read answer3;
+        	        
+        	        if [[ $answer3 == "Y" ]] || [[ $answer3 == "y" ]];
+        	        then
+        	            {
+            	            echo -e "\e[1;32m[+] Inisilizing...\e[0m";
+            	            sleep 0.6;
+            	            echo -e "\e[1;32m[+] Uninstalling Preveous version of sudo...\e[0m" &&
+            	            command rm -R /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            command rm /data/data/com.termux/files/usr/etc/su.bashrc &&
+            	            command rm /data/data/com.termux/files/usr/bin/sudo &&
+            	            echo -e "\e[1;32m[+] Installing New version of sudo...\e[0m" &&
+            	            command cp -R sudo-in-termux/sudo/ /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            echo -e "\e[1;32m[+] Upgrading sudo...\e[0m" &&
+            	            command cp -R sudo-in-termux/bin/sudo /data/data/com.termux/files/usr/bin/sudo &&
+            	            echo -e "\e[1;32m[+] Setting up sudo...\e[0m" &&
+            	            command chmod 700 /data/data/com.termux/files/usr/bin/sudo
+        	            } || {
+        	                echo -e "E: Error while Upgrading sudo script.";
+        	                exit 2;
+        	            }
+        	            echo -e "\e[1;32m[+] Successfully Upgraded sudo script.\e[0m";
+        	       
+        	        else
+        	           echo "Aborted by user.";
+        	           exit 1;
+        	        fi
+        	    fi
+        	;;
+        	"--adduser" )
+        	    add_user;
+        	;;
+        	* )
+        		echo "Illeagal option '"${1}"'.";
+        	;;
+        esac
+        
+        exit;
+    else 
+        # short option
+        case $1 in
+        	"-h" )
+        		echo -e "SUDO script version 3.8.1";
+        		echo -e "Copyright (c) Ar Rakin 2020, All Rights Reserved.";
+        		echo -e "Usage: \n";
+        		echo -e "		sudo [option] [args]\n";
+        		echo -e "Options: \n";
+        		echo -e "		-h | --help   Display This Help & Exit.";
+        		echo -e "		-v | --version   Display The version of sudo.";
+        		echo -e "		-r | --remove   Remove sudo binary.";
+        		echo -e "		-c | --command    Run commands with sudo.";
+        		echo -e "		-u | --update    Check & install updates of sudo.";
+        		echo -e "		-a | --adduser    add a user to sudo.\n";
+        		echo -e "Commands:\n";
+        		echo -e "       Use 'logout' command to logout from sudo.";
+        		echo -e "		You Can Run Any Command via sudo as argument. But if you are using Command which contains more than 1 word, then you need to use quotes (e.g. '' or \"\") to execute them.\n";
+        		echo -e "\e[1;33mWARNING: If you don't know what is SU & SUDO then please do not use this. Any Wrong Command Can HARM YOUR DEVICE!\e[0m";
+        	;;
+        	"-v" )
+        	    version=$(cat /data/data/com.termux/files/usr/etc/sudo/version.yml);
+        	    echo $version;
+        	;;
+        	"-r" )
+        	    echo "";
+        	    echo -en "\e[1;33mW: Do You Really Want To Uninstall sudo binary?[Y/n] \e[0m";
+        	    read answer2;
+        	    
+        	    if [[ $answer2 == "y" ]] || [[ $answer2 == "Y" ]];
+        	    then
+        	        
+        	        {
+        	            echo -e "\e[1;32m[+] Uninstalling sudo script...\e[0m" &&
+        	            command rm /data/data/com.termux/files/usr/etc/su.bashrc &&
+        	            command rm -R /data/data/com.termux/files/usr/etc/sudo/
+        	        } || {
+        	            echo -e "E: Can't Uninstall sudo binary.";
+        	            exit 1;
+        	        }
+        	        progress;
+        	        echo -e "[+] Successfully Uninstalled sudo binary!";
+        	        {
+        	            command rm /data/data/com.termux/files/usr/bin/sudo
+        	        }
+        	        exit 1;
+        	    else
+        	        echo "Aborted by user.";
+        	    fi
+        	;;
+        	"-c" )
+        	    # command execute
+                if [[ $2 != "" ]];
+                then
+                   command ${2};
+                   exit 1;
+                fi
+
+        	;;
+        	"-u" )
+        	    command -v git > /dev/null 2>&1 || {
+        	        command apt install git > /dev/null 2>&1;
+        	    };
+        	    command git clone https://github.com/rakinar2/sudo-in-termux > /dev/null 2>&1;
+        	    u_version=$(cat sudo-in-termux/sudo/version.yml);
+        	    c_version=$(cat /data/data/com.termux/files/usr/etc/sudo/version.yml);
+        	    if [[ $u_version == $c_version ]];
+        	    then
+        	        echo -e "\e[34mMessage: You are using the latest version of sudo script.\e[0m";
+        	    else 
+        	        echo -e "\e[34mMessage: A latest version of sudo script is available!.\e[0m";
+        	        echo -en "\e[1;33m[?] Do you want to upgrade sudo script? [Y/n]\e[0m";
+        	        read answer3;
+        	        
+        	        if [[ $answer3 == "Y" ]] || [[ $answer3 == "y" ]];
+        	        then
+        	            {
+            	            echo -e "\e[1;32m[+] Inisilizing...\e[0m";
+            	            sleep 0.6;
+            	            echo -e "\e[1;32m[+] Uninstalling Preveous version of sudo...\e[0m" &&
+            	            command rm -R /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            command rm /data/data/com.termux/files/usr/etc/su.bashrc &&
+            	            command rm /data/data/com.termux/files/usr/bin/sudo &&
+            	            echo -e "\e[1;32m[+] Installing New version of sudo...\e[0m" &&
+            	            command cp -R sudo-in-termux/sudo/ /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            echo -e "\e[1;32m[+] Upgrading sudo...\e[0m" &&
+            	            command cp -R sudo-in-termux/bin/sudo /data/data/com.termux/files/usr/bin/sudo &&
+            	            echo -e "\e[1;32m[+] Setting up sudo...\e[0m" &&
+            	            command chmod 700 /data/data/com.termux/files/usr/bin/sudo
+        	            } || {
+        	                echo -e "E: Error while Upgrading sudo script.";
+        	                exit 2;
+        	            }
+        	            echo -e "\e[1;32m[+] Successfully Upgraded sudo script.\e[0m";
+        	       
+        	        else
+        	           echo "Aborted by user.";
+        	           exit 1;
+        	        fi
+        	    fi
+        	;;
+        	"-a" )
+        	    add_user;
+        	;;
+        	* )
+        		echo "Illeagal option '"${1}"'.";
+        	;;
+        esac
+        
+  
+        exit;
+    fi
+fi
+if [[ $1 != "" ]];
+then
+   command $1;
+   exit 1;
+fi
+
+su_not_found_handle(){
+	echo "E: SU binary not found!";
+}
+check_logout(){
+    if [[ $bin == "logout" ]]; 
+      then
+        echo "";
+        echo -en "\e[1;33mW: Do You Really Want To Log Out? [Y/n] \e[0m";
+        read usertalk;
+        if [[ $usertalk == "y" ]] || [[ $usertalk == "Y" ]];
+        then
+            echo "logged out" > /data/data/com.termux/files/usr/etc/su.bashrc
+            exit 2;
+        else
+      		echo "Aborted.";
+        fi
+      elif [[ $bin == "sudo" ]]; 
+      then
+         su_prompt;
+      else
+        command $bin;
+      fi
+}
+su_prompt(){
+    info=$(cat /data/data/com.termux/files/usr/etc/su.bashrc);
+    user_info=$(grep -w $username /data/data/com.termux/files/usr/etc/sudo/users.yml | head -n1);
+    
+    if [[ $info == "logged in" ]];
+    then
+    command clear;
+    echo -en "\a";
+	while [[ true ]];
+	do
+      echo -en "\e[1;36m["${username}"\e[0m\e[1m@localhost \e[1;32m~\e[1;36m]\e[1;32m#\e[1;36m ";
+      read bin;
+      echo -en "\e[0m";
+      check_logout;
+    done
+    fi
+}
+login_user(){
+    info=$(cat /data/data/com.termux/files/usr/etc/su.bashrc);
+    if [[ $info != "logged in" ]];
+    then
+            echo -en "\e[1;35m";
+            read -p "[Enter Username For SuperUser]# " username;
+            echo -en "\e[0m";
+            
+            echo -en "\e[1;35m";
+            read -p "[Enter Password For SuperUser]# " password;
+            echo -en "\e[0m";
+                
+            ud=${username}": "${password};
+            usernamep=${username}":";
+            username09=$(grep -w $usernamep /data/data/com.termux/files/usr/etc/sudo/users.yml | head -n1);
+            if [[ $username09 == $ud ]]; 
+            then
+            	
+                    echo "logged in" > /data/data/com.termux/files/usr/etc/su.bashrc ;
+                    su_prompt;
+            else
+               echo "E: The User '"${username}"' Does Not Have SuperUser Rights or SuperUser Password Does Not Match.";
+               exit 1;
+            fi
+            
+    else
+        su_prompt;
+    fi
+}
+main(){
+	login_user;
+}
+install_sudo(){
+	if [[ -e /system/bin/su ]]; 
+	then
+		command /system/bin/su > /dev/null 2>&1;
+	
+	elif [[ -e /system/xbin/su ]]; 
+	then
+		command /system/xbin/su > /dev/null 2>&1;
+	
+	elif [[ -e /su/bin/su ]]; 
+	then
+		command /su/bin/su > /dev/null 2>&1;
+		
+	elif [[ -e /sbin/su ]]; 
+	then
+		command /sbin/su > /dev/null 2>&1;
+	
+	
+	elif [[ -e /system/sbin/su ]]; 
+	then
+		command /system/sbin/su > /dev/null 2>&1;
+	
+	
+	elif [[ -e /magisk/.core/bin/su ]]; 
+	then
+		command /magisk/.core/bin/su > /dev/null 2>&1;
+	
+	
+	else 
+		su_not_found_handle;
+		exit;
+	fi
+	
+	{
+		command cp sudo /data/data/com.termux/files/usr/bin/sudo &&
+		command chmod 700 /data/data/com.termux/files/usr/bin/sudo &&
+		command mkdir /data/data/com.termux/files/usr/etc/sudo/ &&
+		command touch /data/data/com.termux/files/usr/etc/sudo/users.yml &&
+		command cp version.yml /data/data/com.termux/files/usr/etc/sudo/version.yml &&
+		progress;
+	} || {
+		echo "E: Error While Installing sudo.";
+		exit 1;
+	}
+	echo "installed" > /data/data/com.termux/files/usr/etc/su.bashrc 
+	
+	echo -e "\e[1;32m[+] sudo installed successfully! Run It by typing 'sudo' on your terminal.\e[0m";
+	
+	subash=$(cat /data/data/com.termux/files/usr/etc/su.bashrc);
+	if [[ $subash != "logged in" ]] && [[ $subash != "logged out" ]];
+	then
+	    echo -en "\e[32m[?] There is no user in your su binary. Do you want to add a user? [Y/n] \e[0m";
+	    read answer08;
+	    
+	    if [[ $answer08 == "y" ]] || [[ $answer08 == "Y" ]];
+	    then
+	        add_user;
+	    else
+	        echo "Aborted by user.";
+	        exit 1;
+	    fi
+	else
+	    exit 1;
+	fi
+	
+	
+}
+
+check_installed(){
+	if [[ -e /data/data/com.termux/files/usr/etc/su.bashrc ]] && [[ -e /data/data/com.termux/files/usr/bin/sudo ]];
+	then
+		main;
+	else
+		# installation code here...
+		
+		echo "E: sudo is not installed on this computer.";
+		echo -en "\e[32mDo You Want To Install It Now? [Y/n] \e[0m";
+		read answer;
+		
+		if [[ $answer == "Y" ]] || [[ $answer == "y" ]];
+		then
+			
+			install_sudo;
+			
+		else
+			echo "E: Aborted by User.";
+		fi
+	fi
+}
+check_installed;
