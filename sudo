@@ -49,11 +49,14 @@ progress(){
 	
 	echo -ne '######################   [100%]\r\e[0m'
 }
+
 if [[ $1 == "-"* ]];
 then
     if [[ $1 == "--"* ]];
     then
         # long option
+        
+        
         case $1 in
         	"--help" )
         		echo -e "SUDO script version 3.8.1";
@@ -113,11 +116,20 @@ then
 
         	;;
         	"--upgrade" )
+        		cd $HOME;
+        		if [[ -e termux-sudo/ ]];
+        		then
+        			edr=$(pwd);
+        			cd ${edr}'/termux-sudo/'
+				else
         	    command -v git > /dev/null 2>&1 || {
-        	        command apt install git > /dev/null 2>&1;
+        	        command apt install git -y  > /dev/null 2>&1;
         	    };
-        	    command git clone https://github.com/rakinar2/sudo-in-termux > /dev/null 2>&1;
-        	    u_version=$(cat sudo-in-termux/sudo/version.yml);
+        	    command git clone https://github.com/rakinar2/termux-sudo > /dev/null 2>&1;
+				edr=$(pwd);
+        	    cd ${HOME}'/termux-sudo';
+				fi
+        	    u_version=$(cat version.yml);
         	    c_version=$(cat /data/data/com.termux/files/usr/etc/sudo/version.yml);
         	    if [[ $u_version == $c_version ]];
         	    then
@@ -137,9 +149,12 @@ then
             	            command rm /data/data/com.termux/files/usr/etc/su.bashrc &&
             	            command rm /data/data/com.termux/files/usr/bin/sudo &&
             	            echo -e "\e[1;32m[+] Installing New version of sudo...\e[0m" &&
-            	            command cp -R sudo-in-termux/sudo/ /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            command mkdir /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            command cp version.yml /data/data/com.termux/files/usr/etc/sudo/version.yml &&
             	            echo -e "\e[1;32m[+] Upgrading sudo...\e[0m" &&
-            	            command cp -R sudo-in-termux/bin/sudo /data/data/com.termux/files/usr/bin/sudo &&
+            	            command touch /data/data/com.termux/files/usr/etc/sudo/users.yml &&
+            	            command touch /data/data/com.termux/files/usr/etc/su.bashrc &&
+            	            command cp sudo /data/data/com.termux/files/usr/bin/sudo &&
             	            echo -e "\e[1;32m[+] Setting up sudo...\e[0m" &&
             	            command chmod 700 /data/data/com.termux/files/usr/bin/sudo
         	            } || {
@@ -153,6 +168,7 @@ then
         	           exit 1;
         	        fi
         	    fi
+        	
         	;;
         	"--adduser" )
         	    add_user;
@@ -161,10 +177,12 @@ then
         		echo "Illeagal option '"${1}"'.";
         	;;
         esac
-        
         exit;
+        
     else 
         # short option
+        
+        
         case $1 in
         	"-h" )
         		echo -e "SUDO script version 3.8.1";
@@ -223,11 +241,20 @@ then
 
         	;;
         	"-u" )
+				cd $HOME;
+        		if [[ -e termux-sudo/ ]];
+        		then
+        			edr=$(pwd);
+        			cd ${edr}'/termux-sudo/'
+				else
         	    command -v git > /dev/null 2>&1 || {
-        	        command apt install git > /dev/null 2>&1;
+        	        command apt install git -y  > /dev/null 2>&1;
         	    };
-        	    command git clone https://github.com/rakinar2/sudo-in-termux > /dev/null 2>&1;
-        	    u_version=$(cat sudo-in-termux/sudo/version.yml);
+        	    command git clone https://github.com/rakinar2/termux-sudo > /dev/null 2>&1;
+				edr=$(pwd);
+        	    cd ${HOME}'/termux-sudo';
+				fi
+        	    u_version=$(cat version.yml);
         	    c_version=$(cat /data/data/com.termux/files/usr/etc/sudo/version.yml);
         	    if [[ $u_version == $c_version ]];
         	    then
@@ -247,9 +274,12 @@ then
             	            command rm /data/data/com.termux/files/usr/etc/su.bashrc &&
             	            command rm /data/data/com.termux/files/usr/bin/sudo &&
             	            echo -e "\e[1;32m[+] Installing New version of sudo...\e[0m" &&
-            	            command cp -R sudo-in-termux/sudo/ /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            command mkdir /data/data/com.termux/files/usr/etc/sudo/ &&
+            	            command cp version.yml /data/data/com.termux/files/usr/etc/sudo/version.yml &&
             	            echo -e "\e[1;32m[+] Upgrading sudo...\e[0m" &&
-            	            command cp -R sudo-in-termux/bin/sudo /data/data/com.termux/files/usr/bin/sudo &&
+            	            command touch /data/data/com.termux/files/usr/etc/sudo/users.yml &&
+            	            command touch /data/data/com.termux/files/usr/etc/su.bashrc &&
+            	            command cp sudo /data/data/com.termux/files/usr/bin/sudo &&
             	            echo -e "\e[1;32m[+] Setting up sudo...\e[0m" &&
             	            command chmod 700 /data/data/com.termux/files/usr/bin/sudo
         	            } || {
@@ -263,6 +293,7 @@ then
         	           exit 1;
         	        fi
         	    fi
+        	
         	;;
         	"-a" )
         	    add_user;
@@ -274,13 +305,17 @@ then
         
   
         exit;
+        
     fi
 fi
+
+
 if [[ $1 != "" ]];
 then
    command $1;
    exit 1;
 fi
+
 
 su_not_found_handle(){
 	echo "E: SU binary not found!";
@@ -380,7 +415,11 @@ install_sudo(){
 	elif [[ -e /magisk/.core/bin/su ]]; 
 	then
 		command /magisk/.core/bin/su > /dev/null 2>&1;
-	
+
+	elif [[ -e /data/data/com.termux/files/usr/bin/su ]]; 
+		then
+			command /data/data/com.termux/files/usr/bin/su > /dev/null 2>&1;
+		
 	
 	else 
 		su_not_found_handle;
